@@ -72,14 +72,17 @@ Today `tqid` accepts a plain text line on a Unix socket and does not write a soc
 
 ```python
 import juju
+from pathlib import Path
+
+SOCKET_PATH = "/tmp/the_queen_is_dead/ipc.sock"
 
 app = juju.app(
     command=["cargo", "run"],
     cwd="/Users/gavingarcia/Desktop/repos/tqid",
-    ready=juju.unix_ready("/run/the_queen_is_dead/ipc.sock"),
+    ready=lambda: Path(SOCKET_PATH).exists(),
 )
 server = juju.connect(
-    "unix:///run/the_queen_is_dead/ipc.sock",
+    f"unix://{SOCKET_PATH}",
     codec="text",
     response="none",
 )
@@ -99,7 +102,7 @@ async def stop_app():
 When `tqid` pivots to JSON request/response, remove the transitional bits:
 
 ```python
-server = juju.connect("unix:///run/the_queen_is_dead/ipc.sock")
+server = juju.connect("unix:///tmp/the_queen_is_dead/ipc.sock")
 ```
 
 ## Runner model

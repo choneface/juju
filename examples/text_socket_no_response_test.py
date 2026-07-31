@@ -1,19 +1,19 @@
 from pathlib import Path
 
-import juju
+import be_the_cowboy
 
-SOCKET_PATH = "/tmp/the_queen_is_dead/ipc.sock"
+SOCKET_PATH = "/tmp/example-app/ipc.sock"
 SOCKET = f"unix://{SOCKET_PATH}"
 
-app = juju.app(
+app = be_the_cowboy.app(
     command=["cargo", "run"],
-    cwd="/Users/gavingarcia/Desktop/repos/tqid",
+    cwd="../target-app",
     ready=lambda: Path(SOCKET_PATH).exists(),
 )
-server = juju.connect(SOCKET, codec="text", response="none")
+server = be_the_cowboy.connect(SOCKET, codec="text", response="none")
 
 
-@juju.setup
+@be_the_cowboy.setup
 async def start_app():
     socket = Path(SOCKET_PATH)
     if socket.exists():
@@ -21,35 +21,35 @@ async def start_app():
     await app.start()
 
 
-@juju.teardown
+@be_the_cowboy.teardown
 async def stop_app():
     if app.process and app.process.returncode is None:
         await server.send("SHUTDOWN")
         await app.stop()
 
 
-@juju.test
-async def sends_ping_line_to_tqid():
+@be_the_cowboy.test
+async def sends_ping_line_to_target():
     response = await server.send("PING")
 
     assert response.body is None
 
 
-@juju.test
-async def sends_status_line_to_tqid():
+@be_the_cowboy.test
+async def sends_status_line_to_target():
     response = await server.send("STATUS")
 
     assert response.body is None
 
 
-@juju.test
-async def sends_lowercase_text_line_to_tqid():
-    response = await server.send("hello from juju")
+@be_the_cowboy.test
+async def sends_lowercase_text_line_to_target():
+    response = await server.send("hello from be-the-cowboy")
 
     assert response.body is None
 
 
-@juju.test
+@be_the_cowboy.test
 async def sends_structured_text_for_future_jsonish_shape():
     response = await server.send("event=ping id=42")
 

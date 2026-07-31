@@ -1,38 +1,39 @@
-# juju
+# be-the-cowboy
 
-`juju` is a small Python library and test runner for exercising real IPC handlers in a target app. It starts the app, sends messages over TCP or Unix sockets, and runs test cases concurrently by default.
+`be-the-cowboy` is a small Python library and test runner for exercising real IPC handlers in a target app. It starts the app, sends messages over TCP or Unix sockets, and runs test cases concurrently by default.
 
-It is named after *Juju* by Siouxsie and the Banshees.
+It is named after *Be the Cowboy* by Mitski.
 
-## Install locally
+## Install Locally
 
 ```sh
 python -m pip install -e .
 ```
 
-## A test file
+## A Test File
 
 ```python
-import juju
+import be_the_cowboy as btc
 
-app = juju.app(
+app = btc.app(
     command=["cargo", "run"],
-    ready=juju.tcp_ready("127.0.0.1", 7878),
+    cwd="../target-app",
+    ready=btc.tcp_ready("127.0.0.1", 7878),
 )
-server = juju.connect("tcp://127.0.0.1:7878")
+server = btc.connect("tcp://127.0.0.1:7878")
 
 
-@juju.setup
+@btc.setup
 async def start_app():
     await app.start()
 
 
-@juju.teardown
+@btc.teardown
 async def stop_app():
     await app.stop()
 
 
-@juju.test
+@btc.test
 async def ping_returns_pong():
     response = await server.send({"type": "ping"})
 
@@ -43,17 +44,17 @@ async def ping_returns_pong():
 Run it:
 
 ```sh
-juju test tests/ipc_test.py
+be-the-cowboy test tests/ipc_test.py
 ```
 
-## IPC protocol
+## IPC Protocol
 
 The default codec is intentionally boring: JSON Lines. Each `send()` call opens a connection, writes one message plus `\n`, then reads one newline-delimited response. That makes concurrent tests naturally exercise parallel connection handling in the target program.
 
 Supported URLs:
 
 - `tcp://127.0.0.1:7878`
-- `unix:///tmp/app.sock`
+- `unix:///tmp/example-app/ipc.sock`
 
 Supported codecs:
 
@@ -66,59 +67,66 @@ Supported response modes:
 - `response="text"` reads one text line
 - `response="none"` writes, flushes, and closes without waiting for a reply
 
-## Current tqid shape
+## Text Socket Without Responses
 
-Today `tqid` accepts a plain text line on a Unix socket and does not write a socket response. That works like this:
+For apps that currently accept plain text on a Unix socket and do not write a socket response:
 
 ```python
-import juju
 from pathlib import Path
 
-SOCKET_PATH = "/tmp/the_queen_is_dead/ipc.sock"
+import be_the_cowboy as btc
 
-app = juju.app(
+SOCKET_PATH = "/tmp/example-app/ipc.sock"
+
+app = btc.app(
     command=["cargo", "run"],
-    cwd="/Users/gavingarcia/Desktop/repos/tqid",
+    cwd="../target-app",
     ready=lambda: Path(SOCKET_PATH).exists(),
 )
-server = juju.connect(
+server = btc.connect(
     f"unix://{SOCKET_PATH}",
     codec="text",
     response="none",
 )
 
 
-@juju.setup
+@btc.setup
 async def start_app():
+    socket = Path(SOCKET_PATH)
+    if socket.exists():
+        socket.unlink()
     await app.start()
 
 
-@juju.teardown
+@btc.teardown
 async def stop_app():
-    await server.send("SHUTDOWN")
-    await app.stop()
+    if app.process and app.process.returncode is None:
+        await server.send("SHUTDOWN")
+        await app.stop()
 ```
 
-When `tqid` pivots to JSON request/response, remove the transitional bits:
+When the app pivots to JSON request/response, remove the transitional bits:
 
 ```python
-server = juju.connect("unix:///tmp/the_queen_is_dead/ipc.sock")
+server = btc.connect("unix:///tmp/example-app/ipc.sock")
 ```
 
-## Runner model
+## Runner Model
 
-- `@juju.setup` functions run once before tests.
-- `@juju.teardown` functions run once after tests.
-- `@juju.test` functions run concurrently by default.
-- Use `juju test --jobs 1 ...` for serial execution.
+- `@btc.setup` functions run once before tests.
+- `@btc.teardown` functions run once after tests.
+- `@btc.test` functions run concurrently by default.
+- Use `be-the-cowboy test --jobs 1 ...` for serial execution.
 
-## API sketch
+## API Sketch
 
 ```python
-target = juju.app(command=["cargo", "run"], cwd="../my-rust-app")
+import be_the_cowboy as btc
+
+target = btc.app(command=["cargo", "run"], cwd="../target-app")
 await target.start()
 
-server = juju.connect("tcp://127.0.0.1:7878")
+server = btc.connect("tcp://127.0.0.1:7878")
 response = await server.send({"op": "health"})
 
 response.expect({"ok": True})

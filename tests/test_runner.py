@@ -4,7 +4,7 @@ import sys
 import unittest
 from pathlib import Path
 
-from juju.runner import run_tests
+from be_the_cowboy.runner import run_tests
 
 
 class RunnerTests(unittest.IsolatedAsyncioTestCase):
@@ -30,10 +30,10 @@ class RunnerTests(unittest.IsolatedAsyncioTestCase):
 class CliTests(unittest.TestCase):
     def test_cli_runs_registered_tests(self):
         root = Path(__file__).resolve().parents[1]
-        fixture = root / "tests" / "fixtures" / "juju_sample_test.py"
+        fixture = root / "tests" / "fixtures" / "be_the_cowboy_sample_test.py"
 
         completed = subprocess.run(
-            [sys.executable, "-m", "juju.cli", "test", str(fixture)],
+            [sys.executable, "-m", "be_the_cowboy.cli", "test", str(fixture)],
             cwd=root,
             env={"PYTHONPATH": str(root / "src")},
             text=True,
@@ -43,4 +43,4 @@ class CliTests(unittest.TestCase):
         )
 
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
-        self.assertIn("juju: 2 passed, 0 failed", completed.stdout)
+        self.assertIn("be-the-cowboy: 2 passed, 0 failed", completed.stdout)

@@ -1,15 +1,16 @@
 [build-system]
-requires = ["setuptools>=69"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "juju-ipc"
+name = "be-the-cowboy"
 version = "0.1.0"
 description = "A tiny concurrent IPC testing tool."
 readme = "README.md"
 requires-python = ">=3.9"
-authors = [{ name = "juju contributors" }]
-license = { text = "MIT" }
+authors = [{ name = "be-the-cowboy contributors" }]
+license = "MIT"
+license-files = ["LICENSE"]
 keywords = ["ipc", "testing", "concurrency", "jsonlines"]
 classifiers = [
   "Development Status :: 3 - Alpha",
@@ -19,7 +20,7 @@ classifiers = [
 ]
 
 [project.scripts]
-juju = "juju.cli:main"
+be-the-cowboy = "be_the_cowboy.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

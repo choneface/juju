@@ -57,7 +57,7 @@ async def run_files(paths: list[str | Path], jobs: int | None = None) -> int:
         load_file(Path(path))
 
     if not registry.tests:
-        print("juju: no tests registered", file=sys.stderr)
+        print("be-the-cowboy: no tests registered", file=sys.stderr)
         return 1
 
     try:
@@ -77,7 +77,7 @@ async def run_files(paths: list[str | Path], jobs: int | None = None) -> int:
             print(indent(result.error.rstrip(), "  "))
 
     passed = len(results) - len(failed)
-    print(f"\njuju: {passed} passed, {len(failed)} failed")
+    print(f"\nbe-the-cowboy: {passed} passed, {len(failed)} failed")
     return 1 if failed else 0
 
 
@@ -113,7 +113,7 @@ async def call(fn: Callable[..., Any]) -> Any:
 
 def load_file(path: Path) -> None:
     path = path.resolve()
-    module_name = f"juju_user_test_{abs(hash(path))}"
+    module_name = f"be_the_cowboy_user_test_{abs(hash(path))}"
     spec = importlib.util.spec_from_file_location(module_name, path)
     if not spec or not spec.loader:
         raise RuntimeError(f"could not load test file: {path}")

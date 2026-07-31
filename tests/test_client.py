@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-import juju
+import be_the_cowboy
 
 
 class ClientTests(unittest.IsolatedAsyncioTestCase):
@@ -27,7 +27,7 @@ class ClientTests(unittest.IsolatedAsyncioTestCase):
         await self.server.wait_closed()
 
     async def test_send_jsonlines_message(self):
-        client = juju.connect(self.url)
+        client = be_the_cowboy.connect(self.url)
 
         response = await client.send({"type": "ping"})
 
@@ -36,7 +36,7 @@ class ClientTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.received, [b'{"type":"ping"}\n'])
 
     async def test_send_text_without_waiting_for_response(self):
-        client = juju.connect(self.url, codec="text", response="none")
+        client = be_the_cowboy.connect(self.url, codec="text", response="none")
 
         response = await client.send("SHUTDOWN")
 
@@ -47,7 +47,7 @@ class ClientTests(unittest.IsolatedAsyncioTestCase):
 
 class ResponseTests(unittest.TestCase):
     def test_expect_reports_field_mismatches(self):
-        response = juju.Response({"ok": False}, b'{"ok":false}\n')
+        response = be_the_cowboy.Response({"ok": False}, b'{"ok":false}\n')
 
         with self.assertRaises(AssertionError):
             response.expect({"ok": True})
@@ -66,7 +66,7 @@ class UnixSocketClientTests(unittest.IsolatedAsyncioTestCase):
             socket_path = Path(tmp) / "ipc.sock"
             server = await asyncio.start_unix_server(handle, path=socket_path)
             try:
-                client = juju.connect(f"unix://{socket_path}", codec="text", response="none")
+                client = be_the_cowboy.connect(f"unix://{socket_path}", codec="text", response="none")
 
                 response = await client.send("SHUTDOWN")
 

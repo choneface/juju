@@ -48,12 +48,59 @@ juju test tests/ipc_test.py
 
 ## IPC protocol
 
-The first codec is intentionally boring: JSON Lines. Each `send()` call opens a connection, writes one JSON document plus `\n`, then reads one newline-delimited response. That makes concurrent tests naturally exercise parallel connection handling in the target program.
+The default codec is intentionally boring: JSON Lines. Each `send()` call opens a connection, writes one message plus `\n`, then reads one newline-delimited response. That makes concurrent tests naturally exercise parallel connection handling in the target program.
 
 Supported URLs:
 
 - `tcp://127.0.0.1:7878`
 - `unix:///tmp/app.sock`
+
+Supported codecs:
+
+- `codec="jsonlines"` sends JSON plus `\n`
+- `codec="text"` sends plain text plus `\n`
+
+Supported response modes:
+
+- `response="jsonlines"` reads and parses one JSON line
+- `response="text"` reads one text line
+- `response="none"` writes, flushes, and closes without waiting for a reply
+
+## Current tqid shape
+
+Today `tqid` accepts a plain text line on a Unix socket and does not write a socket response. That works like this:
+
+```python
+import juju
+
+app = juju.app(
+    command=["cargo", "run"],
+    cwd="/Users/gavingarcia/Desktop/repos/tqid",
+    ready=juju.unix_ready("/run/the_queen_is_dead/ipc.sock"),
+)
+server = juju.connect(
+    "unix:///run/the_queen_is_dead/ipc.sock",
+    codec="text",
+    response="none",
+)
+
+
+@juju.setup
+async def start_app():
+    await app.start()
+
+
+@juju.teardown
+async def stop_app():
+    await server.send("SHUTDOWN")
+    await app.stop()
+```
+
+When `tqid` pivots to JSON request/response, remove the transitional bits:
+
+```python
+server = juju.connect("unix:///run/the_queen_is_dead/ipc.sock")
+```
 
 ## Runner model
 

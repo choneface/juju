@@ -8,10 +8,14 @@ version = "0.1.0"
 description = "A tiny concurrent IPC testing tool."
 readme = "README.md"
 requires-python = ">=3.9"
+dependencies = [
+  "grpcio-tools>=1.62",
+  "protobuf>=4.25",
+]
 authors = [{ name = "be-the-cowboy contributors" }]
 license = "MIT"
 license-files = ["LICENSE"]
-keywords = ["ipc", "testing", "concurrency", "jsonlines"]
+keywords = ["ipc", "testing", "concurrency", "jsonlines", "protobuf"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",

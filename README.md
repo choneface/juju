@@ -60,6 +60,7 @@ Supported codecs:
 
 - `codec="jsonlines"` sends JSON plus `\n`
 - `codec="text"` sends plain text plus `\n`
+- `codec="protobuf"` sends raw protobuf bytes from a generated message class
 
 Supported response modes:
 
@@ -109,6 +110,39 @@ When the app pivots to JSON request/response, remove the transitional bits:
 
 ```python
 server = btc.connect("unix:///tmp/example-app/ipc.sock")
+```
+
+## Protobuf IPC
+
+Point `be-the-cowboy` at the directory that contains your `.proto` files, then use the generated message class as the client `message_type`:
+
+```python
+import be_the_cowboy as btc
+
+schema = btc.protobuf("../target-app/src/protos")
+Invoke = schema.message("contract.Invoke")
+
+server = btc.connect(
+    "unix:///tmp/example-app/ipc.sock",
+    codec="protobuf",
+    response="none",
+    message_type=Invoke,
+)
+
+await server.send({"command": "PING"})
+await server.send(Invoke(command="STATUS", data=b"payload"))
+```
+
+For protobuf socket responses, pass the response message type too:
+
+```python
+server = btc.connect(
+    "unix:///tmp/example-app/ipc.sock",
+    codec="protobuf",
+    response="protobuf",
+    message_type=Invoke,
+    response_type=Reply,
+)
 ```
 
 ## Runner Model

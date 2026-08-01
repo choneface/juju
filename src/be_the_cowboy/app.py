@@ -78,6 +78,14 @@ class App:
             self.process.kill()
             await self.process.wait()
 
+    async def assert_running(self, delay: float = 0.05) -> None:
+        if not self.process:
+            raise AssertionError("app has not been started")
+
+        await asyncio.sleep(delay)
+        if self.process.returncode is not None:
+            raise AssertionError(f"app exited unexpectedly: {self.process.returncode}")
+
 
 def app(
     command: str | Sequence[str],
